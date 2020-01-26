@@ -1,7 +1,7 @@
 
-#initialize class with a search query, 
-#then strings or json passed to 'Matched' function will be compared to the query 
-#and return true/false based on whether it matches
+#initialize class with a search query and an option to print debug info to console,
+#then strings or json passed to '__Matched' function will be compared to the query 
+#and return true/false based on whether it __Matches
 #search params: AND/OR/NOt, (), "strings"
 #example search parameters:
 # "127.0.0.1" AND "ICMP"
@@ -12,10 +12,12 @@
 # cannot tolerate AND/OR statements without intervening values
 # will add regex laters
 
-class Searcher(object):    
+class searcher(object):    
 
-    def __init__(self, inputstring):
+    
+    def __init__(self, inputstring,debug=False):
         self.parsedsearch=[]
+        self.debug=debug
         count = 0
         while count < len(inputstring):
             if inputstring[count:count+3] == "AND":                
@@ -52,16 +54,16 @@ class Searcher(object):
             else:
                 count+=1
     
-    def IsMatch(data):
+    def IsMatch(self, data):
         self.data=data
-        truth,count=Match()
+        truth,count=self.__Match()
         self.data=None
         return truth
 
     #iterates through the saved search arranges the string comparisons between assorted ANDs and ORs,
     #inverting where a NOT indicates to do such or dropping into a subsearch where () had indicated, 
-    #then initiates the checking function when a string is iterated over to initiate a search of the data passed in
-    def Match(self, count=0, truth=None):
+    #then initiates the __checking function when a string is iterated over to initiate a search of the data passed in
+    def __Match(self, count=0, truth=None):
         
         nottest =True
         while (count < len(self.parsedsearch)):
@@ -71,14 +73,14 @@ class Searcher(object):
                     count+=1
 
             if(self.parsedsearch[count] == 1):
-                    temp,count = self.Match(count+1,truth)
+                    temp,count = self.__Match(count+1,truth)
                     if(truth == None):
                         truth=temp
                     else:
                         truth = truth and temp
 
             elif(self.parsedsearch[count] == 2):
-                    temp,count = self.Match(count+1,truth)
+                    temp,count = self.__Match(count+1,truth)
                     if(truth == None):
                         truth=temp
                     else:
@@ -86,35 +88,36 @@ class Searcher(object):
         
             elif(isinstance(self.parsedsearch[count],str)):
                     if(nottest==False):
-                        truth = not(self.check(count))
+                        truth = not(self.__check(count))
                     else:
-                        truth = self.check(count)
+                        truth = self.__check(count)
                     count+=1
-            elif("Searcher" in str((self.parsedsearch[count]))):
+            elif("searcher" in str((self.parsedsearch[count]))):
                     if(nottest==False):
-                        temp1,temp = self.parsedsearch[count].Match()
+                        temp1,temp = self.parsedsearch[count].__Match()
                         truth = not temp1
                     else:
-                        truth,temp = self.parsedsearch[count].Match()                    
+                        truth,temp = self.parsedsearch[count].__Match()                    
                     count+=1   
        
 
         return bool(truth), int(count)
 
 #now that a string to compare has been identified, this iterates through the data to determine if it is present or not
-def check(self,count,data = self.data):
-    checker = False
-    
-    if isinstance(data, str):
-        if self.parsedsearch[count] in data:
-            checker = True
-    elif isinstance(data, list) or isinstance (data,tuple):
-        for tempcount in range(0,len(data)):
-            if(self.check(count, data.pop[tempcount])):
-                checker=True
-    elif isinstance(data,dict):
-        for key in data:
-            if(self.check(count,data.pop(key))):
+    def __check(self,count,data =None):
+        checker = False
+        if data ==None:
+                data= self.data
+            
+        if isinstance(data, list) or isinstance (data,tuple):
+            while len(data)>0:
+                if(self.__check(count, data.pop(0))):
+                    checker=True
+        elif isinstance(data,dict):
+            for key in list(data.keys()):
+                if(self.__check(count,data.pop(key))):
+                    checker = True
+        else:
+            if self.parsedsearch[count] in data:
                 checker = True
-
-    return checker
+        return checker
