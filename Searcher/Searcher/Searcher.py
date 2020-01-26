@@ -1,4 +1,5 @@
 
+
 #initialize class with a search query and an option to print self.debug info to console,
 #then strings or json passed to '__Matched' function will be compared to the query 
 #and return true/false based on whether it __Matches
@@ -146,6 +147,6 @@ class searcher(object):
                 print(f"found {data}")
             if self.parsedsearch[count] in str(data):
                 if self.debug:
-                    print(f"Match!")
+                    print("Match!")
                 checker = True
         return checker
