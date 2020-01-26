@@ -31,13 +31,36 @@ class Searcher_tests(unittest.TestCase):
 
 
     def testtrue(self):
-        search = Searcher.searcher('"SGML" AND "example"')
+        search = Searcher.searcher('"SGML" AND "example"',True)
         self.assertTrue(search.IsMatch(self.examplejsondes))
 
     def testfalse(self):
+        search = Searcher.searcher('"SGML" AND NOT "example"',True)
+        self.assertFalse(search.IsMatch(self.examplejsondes))
+
+    def testtruenodeb(self):
+        search = Searcher.searcher('"SGML" AND "example"')
+        self.assertTrue(search.IsMatch(self.examplejsondes))
+
+    def testfalsenodeb(self):
         search = Searcher.searcher('"SGML" AND NOT "example"')
         self.assertFalse(search.IsMatch(self.examplejsondes))
 
+    def testsubqueries(self):
+        search = Searcher.searcher('"SGML" AND ("example" OR "meta")', True)
+        self.assertTrue(search.IsMatch(self.examplejsondes))
+    
+    def testsubqueriesnodeb(self):
+        search = Searcher.searcher('"SGML" AND ("example" OR "meta")')
+        self.assertTrue(search.IsMatch(self.examplejsondes))
+
+    def testsubqueriesfalse(self):
+        search = Searcher.searcher('"SGML" AND NOT ("example" OR "meta")', True)
+        self.assertFalse(search.IsMatch(self.examplejsondes))
+    
+    def testsubqueriesfalsenodeb(self):
+        search = Searcher.searcher('"SGML" AND NOT ("example" OR "meta")')
+        self.assertFalse(search.IsMatch(self.examplejsondes))
 
 if __name__ == '__main__':
     unittest.main()
