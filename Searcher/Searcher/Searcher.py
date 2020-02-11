@@ -1,4 +1,4 @@
-
+import re
 
 #initialize class with a search query and an option to print self.debug info to console,
 #then strings or json passed to '__Matched' function will be compared to the query 
@@ -11,10 +11,10 @@
 # must start with a string
 # cannot end with NOT
 # cannot tolerate AND/OR statements without intervening values
+# strings to match cannot contain " as these are used to mark the boundaries of the string
 # will add regex laters
 
 class searcher(object):    
-
     
     def __init__(self, inputstring,debug=False):
         self.parsedsearch=[]
@@ -41,6 +41,19 @@ class searcher(object):
                 count+=3
                 if self.debug:
                     print(f"processing NOT")
+            elif inputstring[count]=='R"':
+                count+=1
+                temp = []
+                flag = True
+                while flag == True:
+                    if inputstring[count] == '"':                        
+                        self.parsedsearch.append(re.compile(''.join(map(r,temp))))
+                        flag = False
+                    else:
+                        temp.append(inputstring[count])
+                    count+=1
+                if self.debug:
+                    print(f"processing regex of {temp}")
             elif inputstring[count]=='"':
                 count+=1
                 temp = []
@@ -73,7 +86,7 @@ class searcher(object):
             print(f"query processed as {self.parsedsearch}")
     
     def IsMatch(self, data):
-        self.data=data
+        self.data=[data]        
         if self.debug:
             print(f"Checking query against {data}")
         truth,count=self.__Match()
@@ -113,10 +126,10 @@ class searcher(object):
                         truth = truth or temp
         
             elif(isinstance(self.parsedsearch[count],str)):
-                    if(nottest==False):
-                        truth = not(self.__check(count))
-                    else:
-                        truth = self.__check(count)
+                    truth = self.__check(count) and nottest
+                    count+=1
+            elif(isinstance(self.parsedsearch[count],re._patttern_type)):
+                    truth = self.__check(count,True) and nottest
                     count+=1
             elif("searcher" in str((self.parsedsearch[count]))):
                     truth =  self.parsedsearch[count].IsMatch(self.data) and nottest     
@@ -127,7 +140,7 @@ class searcher(object):
         return bool(truth), int(count)
 
 #now that a string to compare has been identified, this iterates through the data to determine if it is present or not
-    def __check(self,count,data =None):
+    def __check(self,count,data =None, reg=False):
         if self.debug:
             print(f"checking {self.parsedsearch[count]} against {data}")
         checker = False
@@ -145,8 +158,14 @@ class searcher(object):
         else:
             if self.debug:
                 print(f"found {data}")
-            if self.parsedsearch[count] in str(data):
-                if self.debug:
-                    print("Match!")
-                checker = True
+            if reg==False:
+                if self.parsedsearch[count] in str(data):
+                    if self.debug:
+                        print("Match!")
+                    checker = True
+            elif reg==True:
+                if self.parsedsearch[count].match(str(data)):
+                    if self.debug:
+                        print("Match!")
+                    checker = True
         return checker
