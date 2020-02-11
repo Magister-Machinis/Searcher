@@ -164,7 +164,7 @@ class searcher(object):
                         print("Match!")
                     checker = True
             elif reg==True:
-                if self.parsedsearch[count].match(str(data)):
+                if self.parsedsearch[count].search(str(data)):
                     if self.debug:
                         print("Match!")
                     checker = True
