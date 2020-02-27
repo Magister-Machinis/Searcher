@@ -62,5 +62,9 @@ class Searcher_tests(unittest.TestCase):
         search = Searcher.searcher('"SGML" AND NOT ("example" OR "meta")')
         self.assertFalse(search.IsMatch(self.examplejsondes))
 
+    def testregexTrue(self):
+        search = Searcher.searcher('"SGML" AND NOT ("example" OR "meta") AND R"Stand(a|A)rd"', True)
+        self.assertTrue(search.IsMatch(self.examplejsondes))
+
 if __name__ == '__main__':
     unittest.main()

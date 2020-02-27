@@ -25,7 +25,8 @@ class searcher(object):
             print(f"processing {inputstring}")
 
         while count < len(inputstring):
-
+            if self.debug:
+                print(inputstring[count])
             if inputstring[count:count+3] == "AND":                
                 self.parsedsearch.append(1)
                 count+=3
@@ -41,13 +42,13 @@ class searcher(object):
                 count+=3
                 if self.debug:
                     print(f"processing NOT")
-            elif inputstring[count]=='R"':
-                count+=1
+            elif inputstring[count]=='R' and inputstring[count+1] =='"':
+                count+=2
                 temp = []
                 flag = True
                 while flag == True:
                     if inputstring[count] == '"':                        
-                        self.parsedsearch.append(re.compile(''.join(map(r,temp))))
+                        self.parsedsearch.append(re.compile(''.join(map(str,temp))))
                         flag = False
                     else:
                         temp.append(inputstring[count])
@@ -128,8 +129,8 @@ class searcher(object):
             elif(isinstance(self.parsedsearch[count],str)):
                     truth = self.__check(count) and nottest
                     count+=1
-            elif(isinstance(self.parsedsearch[count],re._patttern_type)):
-                    truth = self.__check(count,True) and nottest
+            elif(isinstance(self.parsedsearch[count],re.Pattern)):
+                    truth = self.__check(count) and nottest
                     count+=1
             elif("searcher" in str((self.parsedsearch[count]))):
                     truth =  self.parsedsearch[count].IsMatch(self.data) and nottest     
@@ -140,7 +141,7 @@ class searcher(object):
         return bool(truth), int(count)
 
 #now that a string to compare has been identified, this iterates through the data to determine if it is present or not
-    def __check(self,count,data =None, reg=False):
+    def __check(self,count,data =None):
         if self.debug:
             print(f"checking {self.parsedsearch[count]} against {data}")
         checker = False
@@ -158,13 +159,14 @@ class searcher(object):
         else:
             if self.debug:
                 print(f"found {data}")
-            if reg==False:
-                if self.parsedsearch[count] in str(data):
+                            
+            if isinstance(self.parsedsearch[count],re.Pattern):
+                if self.parsedsearch[count].search(str(data)):
                     if self.debug:
                         print("Match!")
                     checker = True
-            elif reg==True:
-                if self.parsedsearch[count].search(str(data)):
+            else:
+                if self.parsedsearch[count] in str(data):
                     if self.debug:
                         print("Match!")
                     checker = True
