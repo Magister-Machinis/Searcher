@@ -3,16 +3,19 @@ import re
 #initialize class with a search query and an option to print self.debug info to console,
 #then strings or json passed to '__Matched' function will be compared to the query 
 #and return true/false based on whether it __Matches
-#search params: AND/OR/NOt, (), "strings"
+#search params: AND/OR/NOt, (), "strings", R"regex"
 #example search parameters:
+# "95dd3200bdcd9c9c52a0e2a0b72ce16fd36679a1591a743bb22c50f0bb69bd43"
 # "127.0.0.1" AND "ICMP"
 # ("blocked" OR "terminated") AND NOT ("by operating system")
-# "95dd3200bdcd9c9c52a0e2a0b72ce16fd36679a1591a743bb22c50f0bb69bd43"
-# must start with a string
+# ("blocked" OR "terminated") AND NOT ("by operating system") AND R"Stand(a|A)rd"
+# each query or subquery (within parenthesis) must start with a string or regex
 # cannot end with NOT
+# i.e. "127.0.0.1" AND "ICMP" NOT is not supported
 # cannot tolerate AND/OR statements without intervening values
+# i.e. "127.0.0.1" AND OR "ICMP" is not supported
 # strings to match cannot contain " as these are used to mark the boundaries of the string
-# will add regex laters
+# 
 
 class searcher(object):    
     
