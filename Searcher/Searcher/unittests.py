@@ -29,7 +29,7 @@ class Searcher_tests(unittest.TestCase):
 }"""
     examplejsondes=json.loads(examplejson)
 
-
+    #testing the general match protocol
     def testtrue(self):
         search = Searcher.searcher('"SGML" AND "example"',True)
         self.assertTrue(search.IsMatch(self.examplejsondes))
@@ -69,6 +69,13 @@ class Searcher_tests(unittest.TestCase):
     def testregex(self):
         search = Searcher.searcher('"SGML" AND ("example" OR "meta") AND R"Stand(a|A)rd"', True)
         self.assertTrue(search.IsMatch(self.examplejsondes))
+    
+    #testing the specific match protocol
+    def testtrueSpec(self):
+        search = Searcher.searcher('"Markup" AND "Language"',True)
+        self.assertTrue(search.SpecificMatch(self.examplejsondes))
 
+
+    
 if __name__ == '__main__':
     unittest.main()
