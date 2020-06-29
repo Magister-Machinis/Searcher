@@ -16,6 +16,14 @@ import re
 # i.e. "127.0.0.1" AND OR "ICMP" is not supported
 # strings to match cannot contain " as these are used to mark the boundaries of the string
 # 
+# To use:
+#    initialize an instance of the class with the desired query, and optional debug output.
+#    .IsMatch() accepts a deserialized json object and returns true if the contents 
+#     of that object match the query criteria.
+#   .SpecifMatch() also accepts a deserialized json object to check with the set query, however it will check 
+#   if a specific field in the object meets the query criteria and returns that field if so 
+
+
 
 class searcher(object):    
     
@@ -89,54 +97,100 @@ class searcher(object):
         if self.debug:
             print(f"query processed as {self.parsedsearch}")
     
-    def IsMatch(self, data):
-        self.data=[data]        
+#user presenting wrapper to specific match option
+def SpecificMatch(self, data):
+    return [item for item in _innerSpecificMatch(self, data)]
+#ensures that results are cleared from object
+    def _innerSpecificMatch(self, data):
+        self.data=[data]
+        
         if self.debug:
             print(f"Checking query against {data}")
-        truth,count=self.__Match()
+                
+        try:
+            for item in self._SMatch():
+                yield item
+        finally:
+            self.data=None
+            
+            
+        
+    #general loop to iterate through object down to leaf items
+    def _SMatch(self, data= self.data):
+        if isinstance(data, list) or isinstance(data, tuple):
+            for item in data:
+               if self.debug:
+                    print(f"iterating down to {item}")
+               yield _SMatch(item)
+        elif isinstance(data, dict):
+            for key in data:
+                if self.debug:
+                    print(f"iterating down to {data[key]}")
+                yield _SMatch(data[key])
+        else:
+           yield _SChecker(str(data))
+
+    #sends data to the _Match() function to see if it fits, then yields up if it does
+    def _SChecker(data,count=0):
+        self.data.append(data)
+        if self.debug:
+            print(f"Checking if {data} is a match")
+        if _Match(subdata=len(self.data)):
+            if self.debug:
+                print("Matched!")
+            yield data
+            
+    
+    def IsMatch(self, data,subdata=0):        
+        self.data=[data]        
+        if self.debug:
+            print(f"Checking query against {data}")        
+        truth,count=self.__Match(subdata=subdata)
         self.data=None
         if self.debug:
             print(f"final truth is {truth}")
         return truth
+        
 
     #iterates through the saved search arranges the string comparisons between assorted ANDs and ORs,
     #inverting where a NOT indicates to do such or dropping into a subsearch where () had indicated, 
     #then initiates the __checking function when a string is iterated over to initiate a search of the data passed in
-    def __Match(self, count=0, truth=None):
+    
+    def __Match(self, count=0, truth=None,subdata=0):
         if self.debug:
             print(f"current truth is {truth}")
         nottest =True
         while (count < len(self.parsedsearch)):
             if self.debug:
                 print(f"current truth is {truth}")
-
+    
             #determines whether we are inverting the results of this part
             if(self.parsedsearch[count] == 3):
                     nottest = False
                     count+=1
 
             if(self.parsedsearch[count] == 1):
-                    temp,count = self.__Match(count+1,truth)
+                    temp,count = self.__Match(count+1,truth=truth,subdata=subdata)
                     if(truth == None):
                         truth=temp
                     else:
                         truth = truth and temp
 
             elif(self.parsedsearch[count] == 2):
-                    temp,count = self.__Match(count+1,truth)
+                    temp,count = self.__Match(count+1,truth=truth,subdata=subdata)
                     if(truth == None):
                         truth=temp
                     else:
                         truth = truth or temp
         
             elif(isinstance(self.parsedsearch[count],str)):
-                    truth = self.__check(count) and nottest
+                    truth = self.__check(count,subdata=subdata) and nottest
                     count+=1
             elif(isinstance(self.parsedsearch[count],re.Pattern)):
-                    truth = self.__check(count) and nottest
+                    truth = self.__check(count,subdata=subdata) and nottest
                     count+=1
             elif("searcher" in str((self.parsedsearch[count]))):
-                    truth =  self.parsedsearch[count].IsMatch(self.data) and nottest     
+                    truth =  self.parsedsearch[count].IsMatch(self.data,subdata=subdata) and nottest     
                     count+=1   
        
         if self.debug:
@@ -144,12 +198,12 @@ class searcher(object):
         return bool(truth), int(count)
 
 #now that a string to compare has been identified, this iterates through the data to determine if it is present or not
-    def __check(self,count,data =None):
+    def __check(self,count,data =None,subdata=0):
         if self.debug:
             print(f"checking {self.parsedsearch[count]} against {data}")
         checker = False
         if data ==None:
-                data= self.data
+                data= self.data[subdata]
             
         if isinstance(data, list) or isinstance (data,tuple):
             for item in data:
