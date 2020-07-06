@@ -36,7 +36,7 @@ class searcher(object):
         if self.debug:
             print(f"processing {inputstring}")
 
-        while count < len(inputstring):
+        while count < len(inputstring)-1:
             if self.debug:
                 print(inputstring[count])
             if inputstring[count:count+3] == "AND":                
@@ -54,7 +54,7 @@ class searcher(object):
                 count+=3
                 if self.debug:
                     print(f"processing NOT")
-            elif inputstring[count]=='R' and inputstring[count+1] =='"':
+            elif inputstring[count]=='R' and inputstring[count+1]=='"':
                 count+=2
                 temp = []
                 flag = True
@@ -99,11 +99,11 @@ class searcher(object):
             print(f"query processed as {self.parsedsearch}")
     
     #wrapper for general match protocol
-    def IsMatch(self, data,subdata=0):        
+    def IsMatch(self, data):        
         self.data=[data]        
         if self.debug:
             print(f"Checking query against {data}")        
-        truth,count=self.__Match(subdata=subdata)
+        truth,count=self.__Match()
         self.data=None
         if self.debug:
             print(f"final truth is {truth}")
@@ -112,7 +112,7 @@ class searcher(object):
     #iterates through the saved search arranges the string comparisons between assorted ANDs and ORs,
     #inverting where a NOT indicates to do such or dropping into a subsearch where () had indicated, 
     #then initiates the __checking function when a string is iterated over to initiate a search of the data passed in    
-    def __Match(self, count=0, truth=None,subdata=None):
+    def __Match(self, count=0, truth=None):
         if self.debug:
             print(f"current truth is {truth}")
         nottest =True
@@ -126,27 +126,27 @@ class searcher(object):
                     count+=1
 
             if(self.parsedsearch[count] == 1):
-                    temp,count = self.__Match(count=count+1,truth=truth,subdata=subdata)
+                    temp,count = self.__Match(count=count+1,truth=truth)
                     if(truth == None):
                         truth=temp
                     else:
                         truth = truth and temp
 
             elif(self.parsedsearch[count] == 2):
-                    temp,count = self.__Match(count=count+1,truth=truth,subdata=subdata)
+                    temp,count = self.__Match(count=count+1,truth=truth)
                     if(truth == None):
                         truth=temp
                     else:
                         truth = truth or temp
         
             elif(isinstance(self.parsedsearch[count],str)):
-                    truth = self.__check(count=count,subdata=subdata) and nottest
+                    truth = self.__check(count=count) and nottest
                     count+=1
             elif(isinstance(self.parsedsearch[count],re.Pattern)):
-                    truth = self.__check(count=count,subdata=subdata) and nottest
+                    truth = self.__check(count=count) and nottest
                     count+=1
             elif("searcher" in str((self.parsedsearch[count]))):
-                    truth =  self.parsedsearch[count].IsMatch(self.data,subdata=subdata) and nottest     
+                    truth =  self.parsedsearch[count].IsMatch(self.data) and nottest     
                     count+=1   
        
         if self.debug:
@@ -157,9 +157,7 @@ class searcher(object):
     def __check(self,count,data =None,subdata=0):
         
         checker = False
-        if subdata !=None:
-                data= subdata
-        elif data == None:
+        if data == None:
             data=self.data
         if self.debug:
             print(f"checking {self.parsedsearch[count]} against {data}")    
@@ -205,15 +203,13 @@ class searcher(object):
             self.data=None
 
     #sends data to the _Match() function to see if it fits, then yields up if it does
-    def _SChecker(self,data,count=0):
-        self.data.append(data)
+    def _SChecker(self,data):
         if self.debug:
             print(f"Checking if {data} is a match")
             print(f'data set is {self.data}')
             print(f'{len(self.data)}')
-        truth,count=self.__Match(subdata=self.data[-1])
-        del self.data[-1]
-        if truth:
+             
+        if self.subsearch.IsMatch(data):
             if self.debug:
                 print("Matched!")
             yield data
@@ -237,8 +233,11 @@ class searcher(object):
                 yield item
 
     #user presenting wrapper to specific match option
-    def SpecificMatch(self, data):  
-         data = [test for test in (item for item in self._innerSpecificMatch(data))]
-         if self.debug:
-            print(f"results are {data}")
-         return data
+    def SpecificMatch(self, data):
+        self.subsearch=searcher("PLACEHOLDER")
+        self.subsearch.parsedsearch=self.parsedsearch
+        data = [test for test in (item for item in self._innerSpecificMatch(data))]
+        self.subsearch=None
+        if self.debug:
+           print(f"results are {data}")
+        return data

@@ -125,9 +125,7 @@ class Searcher_tests(unittest.TestCase):
 
     def testsubqueries(self):
         search = Searcher.searcher('"SGML" AND ("example" OR "meta")', True)
-        self.assertTrue(search.IsMatch(self.examplejsondes))
-    
-    
+        self.assertTrue(search.IsMatch(self.examplejsondes)) 
 
     def testsubqueriesfalse(self):
         search = Searcher.searcher('"SGML" AND NOT ("example" OR "meta")', True)
