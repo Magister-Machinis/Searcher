@@ -26,7 +26,7 @@ import json
 
 
 
-class searcher(object):    
+class searcher(object):
 
     def __init__(self, inputstring,debug=False):
         self.parsedsearch=[]
@@ -111,7 +111,7 @@ class searcher(object):
     
     #iterates through the saved search arranges the string comparisons between assorted ANDs and ORs,
     #inverting where a NOT indicates to do such or dropping into a subsearch where () had indicated, 
-    #then initiates the __checking function when a string is iterated over to initiate a search of the data passed in    
+    #then initiates the __checking function when a string is iterated over to initiate a search of the data passed in   
     def __Match(self, count=0, truth=None):
         if self.debug:
             print(f"current truth is {truth}")

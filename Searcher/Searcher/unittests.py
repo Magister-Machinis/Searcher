@@ -1,5 +1,5 @@
 import unittest
-from Searcher import Searcher
+import Searcher
 import json
 
 class Searcher_tests_No_debug(unittest.TestCase):
